@@ -1,0 +1,12 @@
+{
+  "name": "sample-taming-async",
+  "version": "0.0.0",
+  "description": "Code samples for Taming Asynchronous Programing talk",
+  "dependencies": {
+    "express": "~3.0.6",
+    "mongodb": "~1.2.7",
+    "konphyg": "~1.2.0"
+  },
+  "author": "Enrique Amodeo",
+  "license": "BSD"
+}

@@ -1,0 +1,11 @@
+{
+  "name": "sample-taming-async",
+  "version": "0.0.0",
+  "description": "Code samples for Taming Asynchronous Programing talk (event-stream version)",
+  "dependencies": {
+    "event-stream": "~3.0.11",
+    "domnode-dom": "0.0.1"
+  },
+  "author": "Enrique Amodeo",
+  "license": "BSD"
+}

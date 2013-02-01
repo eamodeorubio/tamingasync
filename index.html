@@ -1,0 +1,1329 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+
+  <title>Taming Asynchronous Programming (beyond Promises)</title>
+
+  <meta name="description"
+        content="Slides of my talk explaining the state of the art in asynchronous programming using javascript">
+  <meta name="author" content="Enrique Amodeo">
+
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style"
+        content="black-translucent"/>
+
+  <link rel="stylesheet" href="reveal.js-2.1/css/reveal.css">
+  <link rel="stylesheet" href="reveal.js-2.1/css/theme/default.css" id="theme">
+
+  <!-- For syntax highlighting -->
+  <link rel="stylesheet" href="reveal.js-2.1/lib/css/zenburn.css">
+
+  <style>
+    /* Aside */
+    .left {
+      float: left;
+    }
+
+    img.left {
+      margin: 0;
+      padding: 0;
+      width: 30%;
+    }
+
+    img.left + ul {
+      width: 55%;
+    }
+
+    /* Figures with captions */
+    .reveal section figure {
+      position: relative;
+      margin: 0 auto;
+      padding:0;
+      width: 600px;
+      height: 400px;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .reveal section figure > img {
+      width: 100%;
+      max-height: none;
+      border-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .reveal section figure > figcaption {
+      position: absolute;
+      bottom: 0.5em;
+      left: 0;
+      width: 100%;
+      border-style: none;
+      border-width: 0;
+      margin: 0;
+      padding: 0;
+      background-color: rgb(37, 33, 28);
+      background-color: rgba(37, 33, 28, 0.5);
+      font-size: 0.4em;
+      text-align: center;
+    }
+
+    .reveal section figure > figcaption {
+      line-height: 1.5em;
+      vertical-align: middle;
+    }
+
+    .reveal section figure > figcaption a {
+      line-height: 1.5em !important;
+    }
+
+    /* Cover */
+    .reveal section.cover footer {
+      line-height: 33px;
+      clear: both;
+    }
+
+    .reveal section.cover > footer {
+      position: absolute;
+      bottom: 0.5em;
+      left: 0;
+      border-style: none;
+      border-width: 0;
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      background-color: rgb(37, 33, 28);
+      background-color: rgba(37, 33, 28, 0.5);
+      font-size: 0.4em;
+      text-align: center;
+    }
+
+    .reveal section.cover footer img {
+      float: left;
+      margin: 0 1em 0 0;
+      padding: 0;
+      cursor: pointer;
+      border-style: none;
+    }
+
+    .reveal section.cover footer a,
+    .reveal section.cover footer span {
+      margin: 0;
+      padding: 0;
+      vertical-align: baseline;
+      line-height: 33px;
+    }
+
+    /* Separata */
+    .reveal section.separata hgroup {
+      margin-top: 0.5em;
+    }
+
+    .reveal section.separata hgroup h2,
+    .reveal section.separata hgroup h3,
+    .reveal section.separata hgroup h4 {
+      color: #F0F1EB;
+      text-shadow: #111150 0px 0px 0.2em;
+    }
+
+    .reveal section.separata figure {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    .reveal section.separata figure > img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      border-style: none;
+      border-width: 0;
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      z-index: -1;
+    }
+
+    /* Animation */
+    div.animation-container {
+      position: relative;
+      margin: 0 auto;
+      padding: 0;
+      width: 809px;
+      height: 399px;
+      background-color: transparent;
+      -moz-box-shadow: rgba(0, 0, 0, 0.3) 0px 0px 6px 0px;
+      -webkit-box-shadow: rgba(0, 0, 0, 0.3) 0px 0px 6px 0px;
+      box-shadow: rgba(0, 0, 0, 0.3) 0px 0px 6px 0px;
+      overflow: hidden;
+    }
+
+    .animation-container .frame,
+    .animation-container .frame > img {
+      position: absolute;
+      top:0;
+      left: 0;
+      border: 0;
+      border-style: none;
+      padding: 0;
+      margin: 0;
+      min-width: 100%;
+      max-width: none;
+      max-height: none;
+      box-shadow: none
+    }
+
+    .animation-container .frame > img.loader {
+      position: absolute;
+      top:140px;
+      left: 180px;
+      border: 0;
+      border-style: none;
+      padding: 0;
+      margin: 0;
+      width: 126px;
+      min-width: 126px;
+      box-shadow: none;
+    }
+  </style>
+  <!-- If the query includes 'print-pdf', use the PDF print sheet -->
+  <script>
+    document.write('<link rel="stylesheet" href="reveal.js-2.1/css/print/' + ( window.location.search.match(/print-pdf/gi) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">');
+  </script>
+
+  <!--[if lt IE 9]>
+  <script src="reveal.js-2.1/lib/js/html5shiv.js"></script>
+  <![endif]-->
+</head>
+
+<body>
+
+<div class="reveal">
+
+<!-- Any section element inside of this container is displayed as a slide -->
+<div class="slides">
+
+<section class="cover">
+  <h1>Taming Asynchronous Programming</h1>
+
+  <h2>(Beyond Promises)</h2>
+
+  <p>
+    <small>Created by <a
+            href="http://eamodeorubio.wordpress.com/about/">Enrique
+      Amodeo</a> /
+      <a href="http://twitter.com/eamodeorubio">@eamodeorubio</a></small>
+  </p>
+  <footer>
+    <a rel="license"
+       href="http://creativecommons.org/licenses/by-nc-sa/2.0/">
+      <img alt="Creative Commons License"
+           src="http://i.creativecommons.org/l/by-nc-sa/2.0/88x31.png"/>
+    </a>
+    <span>This work is licensed under a </span>
+    <a rel="license"
+       href="http://creativecommons.org/licenses/by-nc-sa/2.0/">
+      Creative Commons Attribution-NonCommercial-ShareAlike 2.0 Generic
+      License
+    </a>
+
+  </footer>
+</section>
+
+<section>
+  <h2>Enrique Amodeo</h2>
+  <h4>(who is this guy?)</h4>
+
+  <img src="img/EnriqueAmodeo.jpg" class="left"
+       alt="[Enrique Amodeo, circa 2010]">
+  <ul>
+    <li>Working as a professional since 2000</li>
+    <li>Worked with JAVA/JEE and big companies</li>
+    <li>Loves JS since 2005</li>
+    <li>Test infected</li>
+    <li>Enthusiast of the Agile/Lean way</li>
+    <li>Now Freelancing</li>
+  </ul>
+</section>
+
+<section>
+  <h2>This talk</h2>
+  <ol><!-- Add links !-->
+    <li>Callback hell</li>
+    <li>Promises will save us...</li>
+    <li>Things you cannot promise</li>
+    <li>Functional Programming</li>
+    <li>(Node) Event Streams</li>
+    <li>(Functional) Reactive Programming</li>
+    <li>Concluding thoughts</li>
+  </ol>
+</section>
+
+<section class="separata">
+  <hgroup>
+    <h2>Callback Style</h2>
+
+    <h3>(I mean CPS)</h3>
+  </hgroup>
+
+  <figure>
+    <img src="./img/pyramid.jpg">
+    <figcaption>
+      <span>Pyramid of Sakure at Abusir.</span>
+      <a href="http://www.flickr.com/photos/arancidamoeba/3424387787/in/photostream/"
+         target="_blank">http://bit.ly/VmNWty</a>
+    </figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2>Continuation Passing Style</h2>
+
+  <div class="animation-container">
+    <img class="frame" src="img/async1.png">
+    <img class="fragment frame" src="img/async2.png">
+    <div class="fragment frame">
+      <img src="img/async2.png">
+      <img src="img/360.gif" class="loader">
+    </div>
+    <div class="fragment frame">
+      <img src="img/async3.png">
+      <img src="img/360.gif" class="loader">
+    </div>
+    <div class="fragment frame">
+      <img src="img/async1.png">
+      <img src="img/360.gif" class="loader">
+    </div>
+    <img class="fragment frame" src="img/async4.png">
+  </div>
+
+</section>
+
+<section>
+  <h2>Problem 1: Composing async processes</h2>
+  <h4>(synchronous code)</h4>
+
+  <pre><code contenteditable>
+    // We are used to this:
+    function loadUserPic(userId) {
+      var user = findUserById(userId);
+      return loadPic(user.picId);
+    }
+
+    ui.show(loadUserPic('kike'));
+  </code></pre>
+</section>
+
+<section>
+  <h2>Problem 1: Composing async processes</h2>
+  <h4>(CPS)</h4>
+
+  <pre><code contenteditable>
+    // Both findUserById & loadUserPic are async processes
+    function loadUserPic(userId, ret) {
+      findUserById(userId, function(user) {
+        loadPic(user.picId, ret);
+      });
+    }
+
+    loadUserPic('kike', function(pic) {
+      ui.show(pic);
+    });
+  </code></pre>
+
+  <p class="fragment">The Pyramid of DOOM</p>
+
+</section>
+
+<section>
+  <h2>Problem 1: Composing async processes</h2>
+  <h4>(CPS, slightly better?)</h4>
+
+  <pre><code contenteditable>
+    var loadUserPic = function() {
+      var callback;
+      function loadPicForUser(user) {
+        loadPic(user.picId, callback);
+      }
+      return function loadUserPic(userId, ret) {
+        callback = ret;
+        findUserById(userId, loadPicForUser);
+      }
+    }();
+
+    loadUserPic('kike', ui.show.bind(ui));
+  </code></pre>
+  <p class="fragment">A lot of boilerplate</p>
+</section>
+
+<section>
+  <h2>Problem 2: Error handling</h2>
+  <h4>(Old way)</h4>
+
+  <pre><code contenteditable>
+    function loadUserPic(userId) {
+      var result = findUserById(userId);
+      if(result.error)
+        return result;
+      return loadPic(result.picId);
+    }
+
+    var result = loadUserPic('kike')
+    if(result.error)
+      return ui.error(result.error);
+    ui.show(result);
+  </code></pre>
+
+</section>
+
+<section>
+  <h2>Problem 2: Error handling</h2>
+  <h4>(CPS equivalent)</h4>
+
+  <pre><code contenteditable>
+    function loadUserPic(userId, ret) {
+      findUserById(userId, function(err, user) {
+        if(err)
+          return ret(err);
+        loadPic(user.picId, ret);
+      });
+    }
+
+    loadUserPic('kike', function(err, pic) {
+      if(err)
+        return ui.error(err);
+      ui.show(pic);
+    });
+  </code></pre>
+  <p class="fragment">The Node Way :/</p>
+</section>
+
+<section>
+  <h2>Problem 2: Error handling</h2>
+  <h4>(Exceptions)</h4>
+
+  <pre><code contenteditable>
+    function loadUserPic(userId) {
+      var user = findUserById(userId);
+      return loadPic(user.picId);
+    }
+
+    try {
+      ui.show(loadUserPic('kike'));
+    } catch(err) {
+      ui.error(err);
+    }
+  </code></pre>
+
+</section>
+
+<section>
+  <h2>Problem 2: Error handling</h2>
+  <h4>(CPS)</h4>
+
+  <pre><code contenteditable>
+    function loadUserPic(userId, ret, thr) {
+      findUserById(userId, function(user) {
+        loadPic(user.picId, ret, thr);
+      }, thr);
+    }
+
+    loadUserPic('kike', ui.show.bind(ui), ui.error.bind(ui));
+  </code></pre>
+
+  <p class="fragment">Much better</p>
+</section>
+
+<section>
+  <h2>CPS</h2>
+  <h4>(as is)</h4>
+
+  <p>
+    It is easy to learn... but
+  </p>
+
+  <ul class="fragment">
+    <li>Does not scale very well (complexity)</li>
+    <li>Composing async functions is the key problem</li>
+    <li>NodeJS convention for errors is a boilerplate source</li>
+    <li>It is easy to learn</li>
+  </ul>
+</section>
+
+<section class="separata">
+  <hgroup>
+    <h2>Promises will save us...</h2>
+
+    <h3>(help me!)</h3>
+  </hgroup>
+  <figure>
+    <img src="./img/firefight.jpg">
+    <figcaption>
+      <span>Original by Bill Ward: </span>
+      <a href="http://www.flickr.com/photos/billward/120033586/"
+         target="_blank">http://bit.ly/Vn6tFS</a>
+    </figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2>What is it?</h2>
+  <h4>(a value in the future)</h4>
+
+  <div class="animation-container">
+    <img class="frame" src="img/async1.png">
+    <img class="fragment frame" src="img/p1.png">
+    <img class="fragment frame" src="img/p2.png">
+    <div class="fragment frame">
+      <img src="img/p2.png">
+      <img src="img/360.gif" class="loader">
+    </div>
+    <div class="fragment frame">
+      <img src="img/p3.png">
+      <img src="img/360.gif" class="loader">
+    </div>
+    <div class="fragment frame">
+      <img src="img/p4.png">
+      <img src="img/360.gif" class="loader">
+    </div>
+    <img class="fragment frame" src="img/p5.png">
+  </div>
+</section>
+
+<section>
+  <h2>A promise can be fulfilled once</h2>
+
+  <img src="img/sm.png">
+
+  <p class="fragment">Only can represent one single value</p>
+
+  <p class="fragment">They have memory</p>
+</section>
+
+<section>
+  <h2>Accessing the value</h2>
+
+  <pre><code contenteditable>
+    var promisedPic = loadUserPic('kike');
+
+    // Some time later
+
+    promisedPic.then(function(pic) {
+      ui.show(pic);
+    });
+  </code></pre>
+
+  <p>It doesn't matter if it has been fulfilled yet or not</p>
+</section>
+
+<section>
+  <h2>Chaining</h2>
+  <h4>(so what?)</h4>
+
+  <pre><code contenteditable>
+    findUserById('kike')
+        .then(function(user) {
+          return
+              findPic(user.picId)
+                  .then(function(pic) {
+                    ui.show(pic);
+                  });
+        });
+  </code></pre>
+
+</section>
+
+<section>
+  <h2>Chaining</h2>
+  <h4>(no such thing as a nested promise)</h4>
+
+  <pre><code contenteditable>
+    findUserById('kike')
+        .then(function(user) {
+          return findPic(user.picId);
+        })
+        .then(function(pic) {
+          ui.show(pic);
+        });
+  </code></pre>
+</section>
+
+<section>
+  <h2>Error handling</h2>
+  <h4>(catching errors)</h4>
+
+  <pre><code contenteditable>
+    findUserById('kike')
+        .then(function(user) {
+          return findPic(user.picId);
+        })
+        .then(function(pic) {
+          ui.show(pic);
+        }, ui.error.bind(ui));
+  </code></pre>
+
+  <pre class="fragment"><code contenteditable>
+    findUserById('kike')
+        .then(function(user) {
+          return findPic(user.picId);
+        })
+        .then(function(pic) {
+          ui.show(pic);
+        })
+        .fail(ui.error.bind(ui));
+  </code></pre>
+
+</section>
+
+<section>
+  <h2>Error handling</h2>
+  <h4>(to throw or not to throw?)</h4>
+
+  <pre><code contenteditable>
+    findUserById('kike')
+    .then(function(user) {
+      return findPic(user.picId);
+    })
+    .fail(function(err) {
+      if(err.isFatal())
+        throw err;
+      // Swallow the error !
+    })
+    .then(function(pic) {
+      ui.show(pic);
+    });
+  </code></pre>
+
+</section>
+
+<section>
+  <h2>Error handling</h2>
+  <h4>(ending)</h4>
+
+  <pre><code contenteditable>
+    findUserById('kike')
+        .then(function(user) {
+          return findPic(user.picId);
+        })
+        .then(function(pic) {
+          ui.show(pic);
+        }).done(); // report unhandled errors
+  </code></pre>
+
+  <pre class="fragment"><code contenteditable>
+    findUserById('kike')
+        .then(function(user) {
+          return findPic(user.picId);
+        })
+        .then(function(pic) {
+          ui.show(pic);
+        }).fin(someCleanUp); // Like finally
+  </code></pre>
+
+</section>
+
+<section>
+  <h2>Some promises out there!</h2>
+
+  <ul>
+    <li>
+      <a href="http://api.jquery.com/promise/">jQuery Promises</a> (was buggy)
+    </li>
+    <li>
+      <a href="https://github.com/cujojs/when">When.js</a> - Lightweight
+    </li>
+    <li>
+      <a href="https://github.com/kriskowal/q">Q</a> - Most complete &
+      mature, Node.js adapters, utils...
+    </li>
+    <li>A lot more...</li>
+  </ul>
+</section>
+
+<section class="separata">
+  <hgroup>
+    <h2>Things you cannot promise</h2>
+
+    <h3>(there are no silver bullets)</h3>
+  </hgroup>
+  <figure>
+    <img src="./img/silverbullet.jpg">
+    <figcaption>
+      <span>Original by Ed Schipul: </span>
+      <a href="http://www.flickr.com/photos/eschipul/4160817135/"
+         target="_blank">http://bit.ly/zrrLvC</a>
+    </figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2>Incremental processing</h2>
+  <h4>(pagination, asap response...)</h4>
+
+  <figure>
+    <img src="./img/weight.jpg">
+    <figcaption>
+      <span>Original by pasukaru76: </span>
+      <a href="http://www.flickr.com/photos/pasukaru76/5268559005/"
+         target="_blank">http://bit.ly/VRgwQ2</a>
+    </figcaption>
+  </figure>
+  <p>Promises are for processing the full response!</p>
+</section>
+
+<section>
+  <h2>Event processing</h2>
+  <h4>(UI logic?)</h4>
+
+  <figure>
+    <img src="./img/mouse.jpg">
+    <figcaption>
+      <span>Original by "Explain that stuff": </span>
+      <a href="http://www.flickr.com/photos/explainthatstuff/4546282778/"
+         target="_blank">http://bit.ly/U1yt1G</a>
+    </figcaption>
+  </figure>
+  <p>You'd need one promise for each event instance</p>
+</section>
+
+<section>
+  <h2>Temporal logic</h2>
+  <h4>(throttle, delay...)</h4>
+
+  <figure>
+    <img src="./img/time.jpg">
+    <figcaption>
+      <span>Original by Andrea Zamboni: </span>
+      <a href="http://www.flickr.com/photos/zamboniandrea/170324255/"
+         target="_blank">http://bit.ly/hx7Ts1</a>
+    </figcaption>
+  </figure>
+
+  <p>Do it yourself!</p>
+</section>
+
+<section>
+  <h2>Some use cases</h2>
+  <h4>(there are more...)</h4>
+
+  <ul>
+    <li>Complex user gestures</li>
+    <li>Live search</li>
+    <li>Processing streams of pushed data (SSE, WebSockets...)</li>
+    <li>Incremental processing if large data sets as streams</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Our test case</h2>
+  <h4>(remember the TODO list for MVC?)</h4>
+  <a target="_blank"
+     href="http://localhost:8081/fp.html"><img src="img/hh.png"></a>
+</section>
+
+<section>
+  <h2>Download the code</h2>
+  <h4>(experiment and criticize)</h4>
+
+  <!-- TODO: link to git hub -->
+</section>
+
+<section class="separata">
+  <hgroup>
+    <h2>Functional programming</h2>
+
+    <h3>(this is getting serious)</h3>
+  </hgroup>
+  <figure>
+    <img src="./img/fp.jpg">
+    <figcaption>
+      <span>Original by Federico Casares: </span>
+      <a href="http://www.flickr.com/photos/solofotones/1839531915/"
+         target="_blank">http://bit.ly/11Woqgr</a>
+    </figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2>Composing functions</h2>
+  <h4>(synchronous, procedural)</h4>
+
+  <pre><code contenteditable>
+    function showUserPic(userId) {
+      var user = findUserById(userId);
+      var picId = user.picId;
+      var pic = loadPic(picId);
+      ui.show(pic);
+    }
+
+    showUserPic('kike');
+  </code></pre>
+</section>
+
+<section>
+  <h2>Composing functions</h2>
+  <h4>(synchronous, fuctional)</h4>
+
+  <pre><code contenteditable>
+    var showUserPic = compose([
+      findUserById,
+      getProperty('picId'),
+      loadPic,
+      ui.show.bind(ui)
+    ]);
+
+    showUserPic('kike');
+  </code></pre>
+</section>
+
+<section>
+  <h2>Composing functions</h2>
+  <h4>(asynchronous)</h4>
+
+  <pre><code contenteditable>
+    function showUserPic(userId, ret) {
+      ui.showProgressIndicator();
+      findUserById(userId, function(user) {
+        var picId = user.picId;
+        loadPic(picId, function(pic) {
+          ui.show(pic, ret);
+        });
+      });
+    }
+
+    showUserPic('kike', function() {
+      ui.hideProgressIndicator();
+    });
+  </code></pre>
+
+  <p class="fragment">Note all the intermediate anonymous functions!</p>
+</section>
+
+<section>
+  <h2>Composing functions</h2>
+  <h4>(asynchronous)</h4>
+  <pre><code contenteditable>
+    var showUserPic = composeAsync([
+        ui.showProgressIndicator.bind(ui),
+        findUserById,
+        getProperty('picId'),
+        loadPic,
+        ui.show.bind(ui)
+    ]);
+
+    showUserPic('kike', ui.hideProgressIndicator.bind(ui));
+  </code></pre>
+  <p class="fragment">Exactly the same as the sync version!</p>
+  <p class="fragment">No intermediate anonymous function</p>
+</section>
+
+<section>
+  <h2>To Compose is To Transform</h2>
+  <h4>(async mapping)</h4>
+
+  <pre><code contenteditable>
+    var showUserPic = composeAsync([
+      ui.showProgressIndicator.bind(ui),
+      findUserById, // Async transformation
+      getProperty('picId'),
+      loadPic, // Async transformation
+      ui.show.bind(ui)
+    ]);
+  </code></pre>
+</section>
+
+<section>
+  <h2>To Compose is To Transform</h2>
+  <h4>(sync mapping)</h4>
+  <pre><code contenteditable>
+    var showUserPic = composeAsync([
+        ui.showProgressIndicator.bind(ui),
+        findUserById,
+        getProperty('picId'), // Sync transformation
+        loadPic,
+        ui.show.bind(ui)
+    ]);
+  </code></pre>
+  <pre class="fragment"><code contenteditable>
+    var showUserPic = composeAsync([
+      ui.showProgressIndicator.bind(ui),
+      findUserById,
+      asAsync(getProperty('picId')), // Other names: map, mapSync
+      loadPic,
+      ui.show.bind(ui)
+    ]);
+  </code></pre>
+</section>
+
+<section>
+  <h2>Side effect</h2>
+  <h4>(to update UI and server)</h4>
+  <pre><code contenteditable>
+    var showUserPic = composeAsync([
+        ui.showProgressIndicator.bind(ui), // Side effect
+        findUserById,
+        getProperty('picId'),
+        loadPic,
+        ui.show.bind(ui) // Side effect
+    ]);
+  </code></pre>
+  <p class="fragment">No transformation</p>
+
+  <p class="fragment">No need to wait for response</p>
+
+  <p class="fragment">Warning: we cannot undo a side effect</p>
+</section>
+
+<section>
+  <h2>Easy to implement</h2>
+  <h4>(only happy path is shown)</h4>
+  <pre><code contenteditable>
+    function composeTwo(fn1, fn2) {
+      return function (data, ret, thr) {
+        return fn1(data, function (result) {
+          return fn2(result, ret, thr);
+        }, thr);
+      };
+    }
+
+    function compose(fns) {
+      if (fns.length == 1)
+        return fns[0];
+      if (fns.length == 2)
+        return composeTwo(fns[0], fns[1]);
+      return compose([composeTwo(fns[0], fns[1])]
+                              .concat(fns.slice(2)));
+    };
+  </code></pre>
+</section>
+
+<section>
+  <h2>From sync to async</h2>
+  <h4>(only happy path is shown)</h4>
+  <pre><code contenteditable>
+    function asAsync(syncFn) {
+      return function(data, ret, thr) {
+        try {
+          ret(syncFn(data));
+        } catch(err) {
+          if(typeof thr == 'function')
+            thr(err);
+        }
+      };
+    }
+  </code></pre>
+  <p class="fragment">Some people add a pause using setTimeout,
+    nextTick...</p>
+</section>
+
+<section>
+  <h2>Syntax sugar</h2>
+  <h4>(a matter of taste)</h4>
+
+  <pre><code contenteditable>
+    // If you liked jQuery or promises chains
+    var showUserPic =
+        doAction(ui.showProgressIndicator.bind(ui))
+        .map(findUserById)
+        .mapSync(getProperty('picId'))
+        .map(loadPic)
+        .doAction(ui.show.bind(ui));
+
+    showUserPic
+        .doAction(ui.hideProgressIndicator.bind(ui))('kike');
+  </code></pre>
+</section>
+
+<section>
+  <h2>Almost anything you need</h2>
+  <ul>
+    <li>Transform & Filter</li>
+    <li>Temporal logic: Delay, throttle</li>
+    <li>Synchronization</li>
+    <li>Merging</li>
+    <li>Grouping</li>
+    <li>Unwrapping streams of streams</li>
+    <li>No limit...</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Let's try it</h2>
+  <h4>(live search with FP)</h4>
+
+  <ul>
+    <li>Didn't found a library!!</li>
+    <li>Although <a href="https://github.com/caolan/async">Async.JS</a>
+      control flow matched some of my needs</li>
+    <li>So I wrote my own, a quick hack</li>
+    <li>No error treatment</li>
+    <li>Lightweight: about 1KB</li>
+    <li>TODO: link to tools (new window)</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Let's see some code</h2>
+  <h4>(live search with FP)</h4>
+
+  <p>TODO: link to main (new window)</p>
+</section>
+
+<section class="separata">
+  <hgroup>
+    <h2>(Node) Event streams</h2>
+
+    <h3>(IO everywhere)</h3>
+  </hgroup>
+  <figure>
+    <img src="./img/nodeA.png">
+    <figcaption>
+      <span>The NodeJS project: </span>
+      <a href="http://nodejs.org"
+         target="_blank">http://nodejs.org</a>
+    </figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2>Node streams</h2>
+  <h4>(efficient IO)</h4>
+
+  <pre><code contenteditable>
+    // Streams are EventEmitters
+    dataStream.on('data', function(data) {
+      // Consume a data chunk
+    });
+    dataStream.on('error', function(err) {
+      // Handle error
+    });
+    dataStream.on('end', function() {
+      // No more data
+    });
+    // With a pipe method
+    dataStream.pipe(compressor('zip')).pipe(res);
+  </code></pre>
+  <p class="fragment">Do you want to know more? <a
+          href="https://github.com/substack/stream-handbook">http://bit.ly/Okzywv</a></p>
+</section>
+
+<section>
+  <h2>Event Streams</h2>
+
+  <ul>
+    <li>Use node streams to process events, not only data chunks</li>
+    <li>Readable streams are event sources</li>
+    <li>Writable streams are side effects</li>
+    <li>Through streams are async transformations</li>
+    <li>See Dominic Tarr's project
+      <a href="https://github.com/dominictarr/event-stream">http://bit.ly/mYJuZH</a></li>
+  </ul>
+
+</section>
+
+<section>
+  <h2>Composing streams</h2>
+  <h4>(writing processing pipelines)</h4>
+
+  <pre><code contenteditable>
+    var es = require('event-stream'),
+             domstream = require('domnode-dom');
+    var searchStream = es.pipeline(
+        domstream.createReadStream('input.search', 'keyup'),
+        es.mapSync(trim),
+        es.mapSync(toLowerCase),
+        es.mapSync(function(text) {
+          ui.showProgressIndicator();
+          return text;
+        }),
+        es.map(search),
+    );
+    searchStream.on('data', ui.show.bind(ui));
+    searchStream.on('error', ui.error.bind(ui));
+    searchStream.on('end', ui.hideProgressIndicator.bind(ui));
+  </code></pre>
+  <p class="fragment">Rings a bell?</p>
+</section>
+
+
+<section>
+  <h2>My impression</h2>
+  <ul>
+    <li>Node centric</li>
+    <li>Node is planning to change Stream interface</li>
+    <li>You can use all node streams!</li>
+    <li>There are adapeter for HTML5 APIs</li>
+    <li>Easy to extend</li>
+    <li>Need to use Browserify or similar</li>
+    <li>A lot of different streams exists (<a
+            href="https://github.com/substack/stream-handbook">http://bit.ly/YoairH</a>)
+    </li>
+    <li>Need more docs!</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Let's try it</h2>
+  <h4>(live search with Event Streams)</h4>
+  <ul>
+    <li>Needed to wrote some custom streams (easy)</li>
+    <li>NOT lightweight: about TODO KB (browserify??)</li>
+    <li>TODO: link to tools (new window)</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Let's see some code</h2>
+  <h4>(live search with Event Streams)</h4>
+
+  <p>TODO: link to main (new window)</p>
+</section>
+
+<section class="separata">
+  <hgroup>
+    <h2>(Functional) Reactive Programming</h2>
+
+    <h3>(so fancy name...)</h3>
+  </hgroup>
+  <figure>
+    <img src="./img/assembly_line.jpg">
+    <figcaption>
+      <span>Original by pasukaru76: </span>
+      <a href="http://www.flickr.com/photos/pasukaru76/6893926948/"
+         target="_blank">http://bit.ly/THgQUL</a>
+    </figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2>Almost the same thing</h2>
+  <h4>(but slightly different focus)</h4>
+
+  <ul>
+    <li>Event Streams</li>
+    <li>History of property values</li>
+    <li>Lazy collections/generators</li>
+  </ul>
+</section>
+
+<section>
+  <h2>A (not so) new abstraction</h2>
+  <h4>(unify ideas and language)</h4>
+
+  <ul>
+    <li>First citizen objects: Streams + FP tools</li>
+    <li>Event Emitter: "End", "Data" & "Error" events</li>
+    <li>With memory (promise like)</li>
+    <li>Without memory (event stream like)</li>
+    <li>Common set of operations to transform the flow of events</li>
+    <li>Chainable & Composable (jQuery/promise like)</li>
+  </ul>
+</section>
+
+<section>
+  <h2>A (not so) new abstraction</h2>
+  <h4>(a common set of operations)</h4>
+
+  <ul>
+    <li>Map, Filter & Group to create domain level streams</li>
+    <li>Scan & Reduce to compute things</li>
+    <li>Merge, concat... to mix streams</li>
+    <li>Flatten nested streams</li>
+    <li>Temporal logic for UX and performance</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Some code</h2>
+  <h4>(using bacon.js)</h4>
+
+  <pre><code contenteditable>
+  var searchText = $('input[type="text"][name="search"]')
+          .asEventStream('keyup')
+          .map(".target.value")
+          .map(trimText)
+          .toProperty(""); // memory !
+
+  searchText
+          .sample(500)
+          .skipDuplicates()
+          .filter(shorterThan(3))
+          .map(searchForSearchTerm)
+          .onValue(function (search) {
+            search.on('data', ui.appendResult.bind(ui));
+            search.on('end', ui.endSearching.bind(ui));
+          });
+  </code></pre>
+</section>
+
+<section>
+  <h2>RX</h2>
+  <h4>(from the Microsoft guys)</h4>
+
+  <ul>
+    <li>Very complete</li>
+    <li>Bridges with some of the existing tech</li>
+    <li>Medium weight (16KB min+zip)</li>
+    <li>LINQ centric, JS is an aside</li>
+    <li>Have its own "language"</li>
+    <li>Not very well documented</li>
+    <li>Apache License & Microsoft Open Technologies</li>
+    <li>Some people have doubts about community involvement</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Bacon</h2>
+  <h4>(it's healthy)</h4>
+
+  <ul>
+    <li>Very complete</li>
+    <li>Made for JS (TM)</li>
+    <li>Node & Browser</li>
+    <li>More lightweight (6KB min+zip)</li>
+    <li>Not so huge, very focused</li>
+    <li>Only bridges with jQuery/Zepto</li>
+    <li>Event Streams & Properties</li>
+    <li>Have a look <a href="https://github.com/raimohanska/bacon.js">http://bit.ly/wdEr9r</a></li>
+  </ul>
+</section>
+
+<section>
+  <h2>Let's see some code</h2>
+  <h4>(live search with FRP)</h4>
+
+  <p>TODO: link to main (new window)</p>
+</section>
+
+<section class="separata">
+  <hgroup>
+    <h2>When to use what</h2>
+
+    <h3>(we need to learn new things)</h3>
+  </hgroup>
+  <figure>
+    <img src="./img/notes.jpg">
+    <figcaption>
+      <span>Original by Mike Ambs: </span>
+      <a href="http://www.flickr.com/photos/mike_1630/1227622542/"
+         target="_blank">http://bit.ly/10IWmrY</a>
+    </figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2>When to use CPS</h2>
+
+  <ul>
+    <li>I need at most 2 async transformations, I promise.</li>
+    <li>I'm paranoid about performance</li>
+    <li>No time to learn anything more complex</li>
+    <li>Everybody in my team understand nested callbacks, no problem</li>
+    <li>Async control flow seems intuitive to all of my team</li>
+  </ul>
+</section>
+
+<section>
+  <h2>When to use Promises</h2>
+
+  <ul>
+    <li>My async processes return a single value</li>
+    <li>My async processes return a small collection</li>
+    <li>Async control flow does not seem intuitive to most of my team</li>
+    <li>I've got 1 work day to learn a new thing</li>
+  </ul>
+</section>
+
+<section>
+  <h2>When to use FP</h2>
+
+  <ul>
+    <li>In use cases promises don't help me</li>
+    <li>Lightweight approach</li>
+    <li>My team is comfortable with FP</li>
+    <li>I've got plenty of time to learn a new thing</li>
+    <li>My personal choice</li>
+  </ul>
+</section>
+
+<section>
+  <h2>When to use FRP</h2>
+
+  <ul>
+    <li>In use cases promises don't help me</li>
+    <li>Don't mind using a framework</li>
+    <li>My team is not so comfortable with FP, but can live with it</li>
+    <li>I've got 3 - 5 work days to learn a new thing</li>
+    <li>What I'd suggest in most situations</li>
+  </ul>
+</section>
+
+<section class="separata">
+  <hgroup>
+    <h1>The End</h1>
+
+    <h2>Some questions?</h2>
+  </hgroup>
+  <figure>
+    <img src="./img/questions.jpg">
+    <figcaption>
+      <span>Original by Ethan Lofton: </span>
+      <a href="http://www.flickr.com/photos/eleaf/2536358399/"
+         target="_blank">http://bit.ly/1arHGj</a>
+    </figcaption>
+  </figure>
+</section>
+
+</div>
+
+</div>
+
+
+<script src="reveal.js-2.1/lib/js/head.min.js"></script>
+<script src="reveal.js-2.1/js/reveal.min.js"></script>
+
+<script>
+
+  // Full list of configuration options available here:
+  // https://github.com/hakimel/reveal.js#configuration
+  Reveal.initialize({
+    controls:true,
+    progress:true,
+    history:true,
+
+    theme:Reveal.getQueryHash().theme, // available themes are in /css/theme
+    transition:Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/none
+
+    // Optional libraries used to extend on reveal.js
+    dependencies:[
+      { src:'reveal.js-2.1/lib/js/classList.js', condition:function () {
+        return !document.body.classList;
+      } },
+      { src:'reveal.js-2.1/plugin/markdown/showdown.js', condition:function () {
+        return !!document.querySelector('[data-markdown]');
+      } },
+      { src:'reveal.js-2.1/plugin/markdown/markdown.js', condition:function () {
+        return !!document.querySelector('[data-markdown]');
+      } },
+      { src:'reveal.js-2.1/plugin/highlight/highlight.js', async:true, callback:function () {
+        hljs.initHighlightingOnLoad();
+      } },
+      { src:'reveal.js-2.1/plugin/zoom-js/zoom.js', async:true, condition:function () {
+        return !!document.body.classList;
+      } },
+      { src:'reveal.js-2.1/plugin/notes/notes.js', async:true, condition:function () {
+        return !!document.body.classList;
+      } }
+    ]
+  });
+
+</script>
+
+</body>
+</html>
