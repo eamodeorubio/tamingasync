@@ -14,11 +14,6 @@ module.exports = function (grunt) {
         src:['lib/www/js/frp/bacon.min.js', 'lib/www/js/frp/main.js'],
         dest:'lib/www/js/frp/app.min.js'
       },
-      bfrp:{
-        src:['lib/www/js/frp/bacon.min.js'],
-        dest:'lib/www/js/frp/b.min.js'
-      },
-
       rx:{
         src:[
           'lib/www/js/rx/framework/rx.min.js',
