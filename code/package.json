@@ -7,6 +7,13 @@
     "mongodb": "~1.2.7",
     "konphyg": "~1.2.0"
   },
+  "scripts": {
+    "bundle": "grunt"
+  },
   "author": "Enrique Amodeo",
-  "license": "BSD"
+  "license": "BSD",
+  "devDependencies": {
+    "grunt": "~0.3.17",
+    "grunt-browserify": "~0.1.2"
+  }
 }

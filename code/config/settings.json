@@ -1,5 +1,5 @@
 {
-  "urlPrefix":"http://localhost:3010//uploads/s/",
+  "urlPrefix":"http://localhost:3010/uploads/s/",
   "dbString":"mongodb://hiphunter:0103ifbdr@localhost:27017/hiphunter?w=1",
   "port":8081,
   "delay":500
