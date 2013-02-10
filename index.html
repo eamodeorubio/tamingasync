@@ -793,7 +793,7 @@
 
 <section>
   <h2>Composing functions</h2>
-  <h4>(asynchronous)</h4>
+  <h4>(asynchronous, procedural)</h4>
 
   <pre><code contenteditable>
     function showUserPic(userId, ret) {
@@ -816,14 +816,14 @@
 
 <section>
   <h2>Composing functions</h2>
-  <h4>(asynchronous)</h4>
+  <h4>(asynchronous, functional)</h4>
   <pre><code contenteditable>
     var showUserPic = composeAsync([
-        ui.showProgressIndicator.bind(ui),
+        perform(ui.showProgressIndicator.bind(ui)),
         findUserById,
-        getProperty('picId'),
+        mapSync(getProperty('picId')),
         loadPic,
-        ui.show.bind(ui)
+        perform(ui.show.bind(ui))
     ]);
 
     showUserPic('kike', ui.hideProgressIndicator.bind(ui));
@@ -838,12 +838,52 @@
 
   <pre><code contenteditable>
     var showUserPic = composeAsync([
-      ui.showProgressIndicator.bind(ui),
+      perform(ui.showProgressIndicator.bind(ui)),
       findUserById, // Async transformation
-      getProperty('picId'),
+      mapSync(getProperty('picId')),
       loadPic, // Async transformation
-      ui.show.bind(ui)
+      perform(ui.show.bind(ui))
     ]);
+  </code></pre>
+</section>
+
+<section>
+  <h2>Automate things!</h2>
+  <h4>(only happy path is shown)</h4>
+
+  <pre><code contenteditable>
+    function loadUserPic(userId, ret, thr) {
+      findUserById(userId, function(user) {
+        loadPic(user.picId, ret, thr);
+      }, thr);
+    }
+  </code></pre>
+
+  <pre class="fragment"><code contenteditable>
+    function composeTwo(fn1, fn2) {
+      return function (data, ret, thr) {
+        fn1(data, function (result) {
+          fn2(result, ret, thr);
+        }, thr);
+      };
+    }
+    var loadUserPic = composeTwo(findUserById, loadPic);
+  </code></pre>
+
+</section>
+
+<section>
+  <h2>Compose many</h2>
+  <h4>(only happy path is shown)</h4>
+  <pre><code contenteditable>
+    function compose(fns) {
+      if (fns.length == 1)
+        return fns[0];
+      if (fns.length == 2)
+        return composeTwo(fns[0], fns[1]);
+      return compose([composeTwo(fns[0], fns[1])]
+                            .concat(fns.slice(2)));
+    };
   </code></pre>
 </section>
 
@@ -852,63 +892,12 @@
   <h4>(sync mapping)</h4>
   <pre><code contenteditable>
     var showUserPic = composeAsync([
-        ui.showProgressIndicator.bind(ui),
+        perform(ui.showProgressIndicator.bind(ui)),
         findUserById,
-        getProperty('picId'), // Sync transformation
+        mapSync(getProperty('picId')), // Sync transformation
         loadPic,
-        ui.show.bind(ui)
+        perform(ui.show.bind(ui))
     ]);
-  </code></pre>
-  <pre class="fragment"><code contenteditable>
-    var showUserPic = composeAsync([
-      ui.showProgressIndicator.bind(ui),
-      findUserById,
-      asAsync(getProperty('picId')), // Other names: map, mapSync
-      loadPic,
-      ui.show.bind(ui)
-    ]);
-  </code></pre>
-</section>
-
-<section>
-  <h2>Side effect</h2>
-  <h4>(to update UI and server)</h4>
-  <pre><code contenteditable>
-    var showUserPic = composeAsync([
-        ui.showProgressIndicator.bind(ui), // Side effect
-        findUserById,
-        getProperty('picId'),
-        loadPic,
-        ui.show.bind(ui) // Side effect
-    ]);
-  </code></pre>
-  <p class="fragment">No transformation</p>
-
-  <p class="fragment">No need to wait for response</p>
-
-  <p class="fragment">Warning: we cannot undo a side effect</p>
-</section>
-
-<section>
-  <h2>Easy to implement</h2>
-  <h4>(only happy path is shown)</h4>
-  <pre><code contenteditable>
-    function composeTwo(fn1, fn2) {
-      return function (data, ret, thr) {
-        return fn1(data, function (result) {
-          return fn2(result, ret, thr);
-        }, thr);
-      };
-    }
-
-    function compose(fns) {
-      if (fns.length == 1)
-        return fns[0];
-      if (fns.length == 2)
-        return composeTwo(fns[0], fns[1]);
-      return compose([composeTwo(fns[0], fns[1])]
-                              .concat(fns.slice(2)));
-    };
   </code></pre>
 </section>
 
@@ -916,7 +905,7 @@
   <h2>From sync to async</h2>
   <h4>(only happy path is shown)</h4>
   <pre><code contenteditable>
-    function asAsync(syncFn) {
+    function mapSync(syncFn) {
       return function(data, ret, thr) {
         try {
           ret(syncFn(data));
@@ -927,8 +916,43 @@
       };
     }
   </code></pre>
-  <p class="fragment">Some people add a pause using setTimeout,
-    nextTick...</p>
+  <p class="fragment">Long call stack? Use setTimeout, nextTick...</p>
+</section>
+
+<section>
+  <h2>Side effect</h2>
+  <h4>(to update UI and server)</h4>
+  <pre><code contenteditable>
+    var showUserPic = composeAsync([
+        perform(ui.showProgressIndicator.bind(ui)), // Side effect
+        findUserById,
+        mapSync(getProperty('picId')),
+        loadPic,
+        perform(ui.show.bind(ui)) // Side effect
+    ]);
+  </code></pre>
+  <p>No transformation</p>
+
+  <p>No need to wait for response</p>
+
+  <p>Warning: we cannot undo a side effect</p>
+</section>
+
+<section>
+  <h2>Side effects</h2>
+  <h4>(only happy path is shown)</h4>
+  <pre><code contenteditable>
+    function perform(dangerousEffect) {
+      return function(data, ret) {
+        try {
+          dangerousEffect(data);
+        } finally {
+          if(typeof ret == 'function')
+            ret(data);
+        }
+      };
+    }
+  </code></pre>
 </section>
 
 <section>
@@ -938,14 +962,48 @@
   <pre><code contenteditable>
     // If you liked jQuery or promises chains
     var showUserPic =
-        doAction(ui.showProgressIndicator.bind(ui))
-        .map(findUserById)
-        .mapSync(getProperty('picId'))
-        .map(loadPic)
-        .doAction(ui.show.bind(ui));
+        perform(ui.showProgressIndicator.bind(ui))
+            .map(findUserById)
+            .mapSync(getProperty('picId'))
+            .map(loadPic)
+            .perform(ui.show.bind(ui));
 
     showUserPic
-        .doAction(ui.hideProgressIndicator.bind(ui))('kike');
+        .perform(ui.hideProgressIndicator.bind(ui))('kike');
+  </code></pre>
+</section>
+
+<section>
+  <h2>Any framework out there?</h2>
+  <ul>
+    <li>Didn't find a library !</li>
+    <li><a href="https://github.com/caolan/async">Async.JS</a> is
+      interesting</li>
+    <li>Asynch.JS control flow is cool</li>
+    <li>But map, forEach,
+      etc. <em>cannot do incremental/event processing</em></li>
+  </ul>
+</section>
+
+<section>
+  <h2>Composing with Async</h2>
+
+  <pre><code contenteditable>
+    // Reversed order
+    var showUserPic = async.compose(
+        loadPic,
+        mapSync(getProperty('picId')), // mapSync not in Async
+        findUserById,
+        // perform not in Async
+        perform(ui.showProgressIndicator.bind(ui))
+    );
+
+    showUserPic('kike', function (err, pic) {
+      // Node convention
+      if(err)
+        return ui.showError(err);
+      ui.show(pic);
+    });
   </code></pre>
 </section>
 
@@ -967,11 +1025,9 @@
   <h4>(live search with FP)</h4>
 
   <ul>
-    <li>Didn't find a library!!</li>
-    <li>Although <a href="https://github.com/caolan/async">Async.JS</a>
-      control flow matched some of my needs</li>
-    <li>So I wrote my own, a quick hack</li>
+    <li>I wrote a quick hack with all these tools</li>
     <li>No error treatment</li>
+    <li>No tests :-(</li>
     <li>Lightweight: less than 1 KB (min+zip)</li>
     <li>Code here: <a target="_blank"
                       href="https://github.com/eamodeorubio/tamingasync/tree/master/code/lib/www/js/fp">http://bit.ly/WjOAX7</a></li>
@@ -1018,14 +1074,25 @@
 
 <section>
   <h2>Event Streams</h2>
+  <h4>(not only low level IO)</h4>
 
   <ul>
-    <li>Use node streams to process events, not only data chunks</li>
+    <li>Domain Events</li>
+    <li>Event Sourcing</li>
+    <li>Query results</li>
+    <li>See Dominic Tarr's project
+      <a href="https://github.com/dominictarr/event-stream">http://bit.ly/mYJuZH</a></li>
+  </ul>
+
+</section>
+
+<section>
+  <h2>Event Streams</h2>
+
+  <ul>
     <li>Readable streams are event sources</li>
     <li>Writable streams are side effects</li>
     <li>Through streams are async transformations</li>
-    <li>See Dominic Tarr's project
-      <a href="https://github.com/dominictarr/event-stream">http://bit.ly/mYJuZH</a></li>
   </ul>
 
 </section>
@@ -1056,17 +1123,23 @@
 
 
 <section>
-  <h2>My impression</h2>
+  <h2>Strong points</h2>
   <ul>
-    <li>Node centric</li>
-    <li>Node is planning to change Stream interface</li>
-    <li>You can use all node streams!</li>
+    <li>You can use all node streams libs!</li>
     <li>There have adapters for HTML5 APIs</li>
     <li>Easy to extend</li>
-    <li>Need to use Browserify or similar</li>
     <li>A lot of different streams exists (<a
             href="https://github.com/substack/stream-handbook">http://bit.ly/YoairH</a>)
     </li>
+  </ul>
+</section>
+
+<section>
+  <h2>Weak points</h2>
+  <ul>
+    <li>Node centric</li>
+    <li>Node is planning to change Stream interface</li>
+    <li>Need to use Browserify or similar</li>
     <li>Need more docs!</li>
   </ul>
 </section>
@@ -1099,64 +1172,42 @@
 </section>
 
 <section>
-  <h2>Almost the same thing</h2>
-  <h4>(but focused on different things)</h4>
-
-  <ul>
-    <li>Event Streams</li>
-    <li>History of property values</li>
-    <li>Lazy collections/generators</li>
-  </ul>
-</section>
-
-<section>
-  <h2>A (not so) new abstraction</h2>
+  <h2>The best of both worlds</h2>
   <h4>(unify ideas and language)</h4>
 
   <ul>
-    <li>First citizen objects: Streams + FP tools</li>
-    <li>Event Emitter: "End", "Data" & "Error" events</li>
-    <li>With memory (promise like)</li>
-    <li>Without memory (event stream like)</li>
-    <li>Common set of operations to transform the flow of events</li>
+    <li>Data Source = Streams + FP tools</li>
+    <li>First citizen objects</li>
+    <li>Coherent set of operations</li>
+    <li>Coherent language</li>
     <li>Chainable & Composable (jQuery/promise like)</li>
   </ul>
 </section>
 
 <section>
-  <h2>A (not so) new abstraction</h2>
-  <h4>(a common set of operations)</h4>
+  <h2>Two kinds of Data Sources</h2>
+  <h4>(data sequences)</h4>
 
   <ul>
-    <li>Map, Filter & Group to create domain level streams</li>
-    <li>Scan & Reduce to compute things</li>
-    <li>Merge, concat... to mix streams</li>
-    <li>Flatten nested streams</li>
-    <li>Temporal logic for UX and performance</li>
+    <li>With memory (promise like)</li>
+    <li>Remember N last values</li>
+    <li>Replays N last values</li>
+    <li>Promise like</li>
+    <li>Property: remember only last value</li>
+    <li>Useful for data processing & Event Sourcing</li>
+    <li>Avoid race conditions</li>
   </ul>
 </section>
 
 <section>
-  <h2>Some code</h2>
-  <h4>(using bacon.js)</h4>
+  <h2>Two kinds of Data Sources</h2>
+  <h4>(event streams)</h4>
 
-  <pre><code contenteditable>
-  var searchText = $('input[type="text"][name="search"]')
-          .asEventStream('keyup')
-          .map(".target.value")
-          .map(trimText)
-          .toProperty(""); // memory !
-
-  searchText
-          .sample(500)
-          .skipDuplicates()
-          .filter(shorterThan(3))
-          .map(searchForSearchTerm)
-          .onValue(function (search) {
-            search.on('data', ui.appendResult.bind(ui));
-            search.on('end', ui.endSearching.bind(ui));
-          });
-  </code></pre>
+  <ul>
+    <li>Without memory</li>
+    <li>Useful when we don't care about past info</li>
+    <li>UI Logic</li>
+  </ul>
 </section>
 
 <section>
@@ -1192,6 +1243,30 @@
 </section>
 
 <section>
+  <h2>Some code</h2>
+  <h4>(using bacon.js)</h4>
+
+  <pre><code contenteditable>
+  var searchText = $('input[type="text"][name="search"]')
+          .asEventStream('keyup')
+          .map(".target.value")
+          .map(trimText)
+          .toProperty(""); // memory !
+
+  searchText
+          .sample(500)
+          .skipDuplicates()
+          .filter(shorterThan(3))
+          .map(searchForSearchTerm)
+          .onValue(function (search) {
+            search.on('data', ui.appendResult.bind(ui));
+            search.on('end', ui.endSearching.bind(ui));
+          });
+  </code></pre>
+</section>
+
+
+<section>
   <h2>Let's see some code</h2>
   <h4>(live search with FRP & Bacon.js)</h4>
   <ul>
@@ -1222,12 +1297,10 @@
   <h2>When to use CPS</h2>
 
   <ul>
-    <li>I need at most 2 async transformations, I promise.</li>
+    <li>Symple async logic: at most 2 async transformations.</li>
     <li>I'm paranoid about performance</li>
     <li>No time to learn anything more complex</li>
-    <li>Everybody in my team understands nested callbacks, no problem</li>
-    <li>Async control flow seems intuitive to the team members</li>
-    <li>Small code bases</li>
+    <li>Often in small code bases or POCs</li>
   </ul>
 </section>
 
@@ -1237,8 +1310,7 @@
   <ul>
     <li>My async processes return a single value</li>
     <li>My async processes return a small collection</li>
-    <li>Async control flow does not seem intuitive to most of my team</li>
-    <li>I've got 1 work day to learn a new thing</li>
+    <li>But you need 1 or 2 work days to learn it</li>
   </ul>
 </section>
 
@@ -1249,8 +1321,8 @@
     <li>In use cases promises don't help me</li>
     <li>Lightweight approach</li>
     <li>My team is comfortable with FP</li>
-    <li>I've got plenty of time to learn a new thing</li>
     <li>My personal choice</li>
+    <li>Large code bases</li>
   </ul>
 </section>
 
@@ -1261,8 +1333,25 @@
     <li>In use cases promises don't help me</li>
     <li>Don't mind using a framework</li>
     <li>My team is not so comfortable with FP, but can live with it</li>
-    <li>I've got 3 - 5 work days to learn a new thing</li>
-    <li>What I'd suggest in most situations</li>
+    <li>Large code bases</li>
+    <li>Powerful but needs time to master</li>
+  </ul>
+</section>
+
+<section>
+  <h2>FP vs. FRP</h2>
+
+  <ul>
+    <li>FRP have a small downside</li>
+    <li>Open ended set of end points: DOM, MongoDB strems, WebSockets....</li>
+    <li>Is there an adapter for my event sources?</li>
+    <li>Can I write easily a new adapter if there is none?</li>
+  </ul>
+
+  <ul class="fragment" style="margin-top: 1em">
+    <li>FP have a small downside too</li>
+    <li>Many thinks it's scary !</li>
+    <li>Need to learn a new paradigm</li>
   </ul>
 </section>
 
