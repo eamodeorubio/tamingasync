@@ -793,7 +793,7 @@
 
 <section>
   <h2>Composing functions</h2>
-  <h4>(asynchronous, procedural)</h4>
+  <h4>(asynchronous, naive)</h4>
 
   <pre><code contenteditable>
     function showUserPic(userId, ret) {
@@ -816,7 +816,7 @@
 
 <section>
   <h2>Composing functions</h2>
-  <h4>(asynchronous, functional)</h4>
+  <h4>(asynchronous, higher order functions)</h4>
   <pre><code contenteditable>
     var showUserPic = composeAsync([
         perform(ui.showProgressIndicator.bind(ui)),
@@ -876,7 +876,7 @@
   <h2>Compose many</h2>
   <h4>(only happy path is shown)</h4>
   <pre><code contenteditable>
-    function compose(fns) {
+    function composeAsync(fns) {
       if (fns.length == 1)
         return fns[0];
       if (fns.length == 2)
@@ -916,7 +916,6 @@
       };
     }
   </code></pre>
-  <p class="fragment">Long call stack? Use setTimeout, nextTick...</p>
 </section>
 
 <section>
@@ -1021,8 +1020,32 @@
 </section>
 
 <section>
-  <h2>Let's try it</h2>
-  <h4>(live search with FP)</h4>
+  <h2>Live Search with FP</h2>
+  <h4>(a simplified version)</h4>
+
+  <pre><code contenteditable>
+    var liveSearch = composeAsync([
+      mapSync(keyUpEventsToSearchText),
+      changes(),
+      limitThroughput(2),
+      filter(searchTextShorterThan(3))
+      perform(ui.startSearching.bind(ui)),
+      mapSync(searchTermToSearch),
+      perform(function (search) {
+        search.on('data', ui.appendResult.bind(ui));
+      }),
+      perform(function (search) {
+        search.on('end', ui.endSearching.bind(ui));
+      })
+    ]);
+
+    searchInputText.addEventListener('keyup', liveSearch);
+  </code></pre>
+</section>
+
+<section>
+  <h2>Live Search with FP</h2>
+  <h4>(full code)</h4>
 
   <ul>
     <li>I wrote a quick hack with all these tools</li>
@@ -1098,8 +1121,8 @@
 </section>
 
 <section>
-  <h2>Composing streams</h2>
-  <h4>(writing processing pipelines)</h4>
+  <h2>Live search with Event Streams</h2>
+  <h4>(simplified version)</h4>
 
   <pre><code contenteditable>
     var es = require('event-stream'),
@@ -1121,6 +1144,16 @@
   <p class="fragment">Rings a bell?</p>
 </section>
 
+<section>
+  <h2>live search with Event Streams</h2>
+  <h4>(full code)</h4>
+  <ul>
+    <li>Needed to write some custom streams (easy)</li>
+    <li>NOT lightweight: about 13 KB (min + zip)</li>
+    <li>Code here: <a target="_blank"
+                  href="https://github.com/eamodeorubio/tamingasync/tree/master/code/lib/es">http://bit.ly/VAEDms</a></li>
+  </ul>
+</section>
 
 <section>
   <h2>Strong points</h2>
@@ -1141,17 +1174,6 @@
     <li>Node is planning to change Stream interface</li>
     <li>Need to use Browserify or similar</li>
     <li>Need more docs!</li>
-  </ul>
-</section>
-
-<section>
-  <h2>Let's try it</h2>
-  <h4>(live search with Event Streams)</h4>
-  <ul>
-    <li>Needed to write some custom streams (easy)</li>
-    <li>NOT lightweight: about 13 KB (min + zip)</li>
-    <li>Code here: <a target="_blank"
-                  href="https://github.com/eamodeorubio/tamingasync/tree/master/code/lib/es">http://bit.ly/VAEDms</a></li>
   </ul>
 </section>
 
@@ -1243,8 +1265,8 @@
 </section>
 
 <section>
-  <h2>Some code</h2>
-  <h4>(using bacon.js)</h4>
+  <h2>Live Search with Bacon.JS</h2>
+  <h4>(simplified version)</h4>
 
   <pre><code contenteditable>
   var searchText = $('input[type="text"][name="search"]')
@@ -1265,10 +1287,9 @@
   </code></pre>
 </section>
 
-
 <section>
-  <h2>Let's see some code</h2>
-  <h4>(live search with FRP & Bacon.js)</h4>
+  <h2>Live Search with Bacon.JS</h2>
+  <h4>(full code)</h4>
   <ul>
     <li>Works out of the box (no need to write any extension)</li>
     <li>About 5 KB (min+zip)</li>
