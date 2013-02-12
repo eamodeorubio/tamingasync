@@ -504,8 +504,6 @@
   <img src="img/sm.png">
 
   <p class="fragment">Only can represent one single value</p>
-
-  <p class="fragment">They have memory</p>
 </section>
 
 <section>
@@ -591,24 +589,24 @@
 
   <pre><code contenteditable>
     findUserById('kike')
-    .then(function(user) {
-      return findPic(user.picId);
-    })
-    .fail(function(err) {
-      if(err.isFatal())
-        throw err;
-      // Swallow the error !
-    })
-    .then(function(pic) {
-      ui.show(pic);
-    });
+        .then(function(user) {
+          return findPic(user.picId);
+        })
+        .fail(function(err) {
+          if(err.isFatal())
+            throw err;
+          return recoverError(err);
+        })
+        .then(function(pic) {
+          ui.show(pic);
+        });
   </code></pre>
 
 </section>
 
 <section>
-  <h2>Error handling</h2>
-  <h4>(ending)</h4>
+  <h2>Ending the chain</h2>
+  <h4>(with style)</h4>
 
   <pre><code contenteditable>
     findUserById('kike')
@@ -828,23 +826,8 @@
 
     showUserPic('kike', ui.hideProgressIndicator.bind(ui));
   </code></pre>
-  <p class="fragment">Exactly the same as the sync version!</p>
-  <p class="fragment">No intermediate anonymous function</p>
-</section>
-
-<section>
-  <h2>To Compose is To Transform</h2>
-  <h4>(async mapping)</h4>
-
-  <pre><code contenteditable>
-    var showUserPic = composeAsync([
-      perform(ui.showProgressIndicator.bind(ui)),
-      findUserById, // Async transformation
-      mapSync(getProperty('picId')),
-      loadPic, // Async transformation
-      perform(ui.show.bind(ui))
-    ]);
-  </code></pre>
+  <p class="fragment">Same structure as the sync version!</p>
+  <p class="fragment">No need to change paradigm</p>
 </section>
 
 <section>
@@ -884,6 +867,21 @@
       return compose([composeTwo(fns[0], fns[1])]
                             .concat(fns.slice(2)));
     };
+  </code></pre>
+</section>
+
+<section>
+  <h2>To Compose is To Transform</h2>
+  <h4>(async mapping)</h4>
+
+  <pre><code contenteditable>
+    var showUserPic = composeAsync([
+        perform(ui.showProgressIndicator.bind(ui)),
+        findUserById, // Async transformation
+        mapSync(getProperty('picId')),
+        loadPic, // Async transformation
+        perform(ui.show.bind(ui))
+    ]);
   </code></pre>
 </section>
 
@@ -988,21 +986,22 @@
   <h2>Composing with Async</h2>
 
   <pre><code contenteditable>
-    // Reversed order
-    var showUserPic = async.compose(
-        loadPic,
-        mapSync(getProperty('picId')), // mapSync not in Async
-        findUserById,
-        // perform not in Async
-        perform(ui.showProgressIndicator.bind(ui))
-    );
+  // Reversed order
+  var showUserPic = async.compose(
+      loadPic,
+      // mapSync not in Async
+      mapSync(getProperty('picId')),
+      findUserById,
+      // perform not in Async
+      perform(ui.showProgressIndicator.bind(ui))
+  );
 
-    showUserPic('kike', function (err, pic) {
-      // Node convention
-      if(err)
-        return ui.showError(err);
-      ui.show(pic);
-    });
+  showUserPic('kike', function (err, pic) {
+    // Node convention
+    if(err)
+      return ui.showError(err);
+    ui.show(pic);
+  });
   </code></pre>
 </section>
 
@@ -1161,8 +1160,8 @@
     <li>You can use all node streams libs!</li>
     <li>There have adapters for HTML5 APIs</li>
     <li>Easy to extend</li>
-    <li>A lot of different streams exists (<a
-            href="https://github.com/substack/stream-handbook">http://bit.ly/YoairH</a>)
+    <li>A lot of different streams exists <a
+            href="https://github.com/substack/stream-handbook">http://bit.ly/YoairH</a>
     </li>
   </ul>
 </section>
