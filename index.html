@@ -29,11 +29,12 @@
     img.left {
       margin: 0;
       padding: 0;
-      width: 30%;
+      width: 25%;
     }
 
     img.left + ul {
-      width: 55%;
+      margin: 0;
+      width: 60%;
     }
 
     /* Figures with captions */
@@ -560,26 +561,22 @@
   <h2>Error handling</h2>
   <h4>(catching errors)</h4>
 
-  <pre><code contenteditable>
-    findUserById('kike')
+  <pre><code contenteditable>  findUserById('kike')
         .then(function(user) {
           return findPic(user.picId);
         })
         .then(function(pic) {
           ui.show(pic);
-        }, ui.error.bind(ui));
-  </code></pre>
+        }, ui.error.bind(ui));</code></pre>
 
-  <pre class="fragment"><code contenteditable>
-    findUserById('kike')
+  <pre class="fragment"><code contenteditable>  findUserById('kike')
         .then(function(user) {
           return findPic(user.picId);
         })
         .then(function(pic) {
           ui.show(pic);
         })
-        .fail(ui.error.bind(ui));
-  </code></pre>
+        .fail(ui.error.bind(ui));</code></pre>
 
 </section>
 
@@ -809,23 +806,26 @@
     });
   </code></pre>
 
-  <p class="fragment">Note all the intermediate anonymous functions!</p>
+  <p>Note all the intermediate anonymous functions!</p>
 </section>
 
 <section>
   <h2>Composing functions</h2>
   <h4>(asynchronous, higher order functions)</h4>
-  <pre><code contenteditable>
-    var showUserPic = composeAsync([
+  <pre><code contenteditable>var showUserPic = composeAsync([
         perform(ui.showProgressIndicator.bind(ui)),
-        findUserById,
+        findUserById, // Async transformation
         mapSync(getProperty('picId')),
-        loadPic,
+        loadPic, // Async transformation
         perform(ui.show.bind(ui))
     ]);
-
-    showUserPic('kike', ui.hideProgressIndicator.bind(ui));
-  </code></pre>
+    showUserPic('kike', ui.hideProgressIndicator.bind(ui));</code></pre>
+  <pre class="fragment"><code contenteditable>var showUserPic = compose([
+        findUserById,
+        getProperty('picId'),
+        loadPic,
+        ui.show.bind(ui)
+    ]);</code></pre>
   <p class="fragment">Same structure as the sync version!</p>
   <p class="fragment">No need to change paradigm</p>
 </section>
@@ -871,28 +871,13 @@
 </section>
 
 <section>
-  <h2>To Compose is To Transform</h2>
-  <h4>(async mapping)</h4>
-
-  <pre><code contenteditable>
-    var showUserPic = composeAsync([
-        perform(ui.showProgressIndicator.bind(ui)),
-        findUserById, // Async transformation
-        mapSync(getProperty('picId')),
-        loadPic, // Async transformation
-        perform(ui.show.bind(ui))
-    ]);
-  </code></pre>
-</section>
-
-<section>
-  <h2>To Compose is To Transform</h2>
+  <h2>Mix sync and async logic</h2>
   <h4>(sync mapping)</h4>
   <pre><code contenteditable>
     var showUserPic = composeAsync([
         perform(ui.showProgressIndicator.bind(ui)),
         findUserById,
-        mapSync(getProperty('picId')), // Sync transformation
+        mapSync(getProperty('picId')), //Sync transformation
         loadPic,
         perform(ui.show.bind(ui))
     ]);
@@ -973,7 +958,6 @@
 <section>
   <h2>Any framework out there?</h2>
   <ul>
-    <li>Didn't find a library !</li>
     <li><a href="https://github.com/caolan/async">Async.JS</a> is
       interesting</li>
     <li>Asynch.JS control flow is cool</li>
@@ -1213,10 +1197,7 @@
     <li>With memory (promise like)</li>
     <li>Remember N last values</li>
     <li>Replays N last values</li>
-    <li>Promise like</li>
-    <li>Property: remember only last value</li>
     <li>Useful for data processing & Event Sourcing</li>
-    <li>Avoid race conditions</li>
   </ul>
 </section>
 
@@ -1228,6 +1209,16 @@
     <li>Without memory</li>
     <li>Useful when we don't care about past info</li>
     <li>UI Logic</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Promises VS. FRP</h2>
+
+  <ul>
+    <li>Property: data sequence than remembers only the last value</li>
+    <li>Promise: a property with only one single value/event</li>
+    <li>Promises are a subset of FRP</li>
   </ul>
 </section>
 
@@ -1355,23 +1346,6 @@
     <li>My team is not so comfortable with FP, but can live with it</li>
     <li>Large code bases</li>
     <li>Powerful but needs time to master</li>
-  </ul>
-</section>
-
-<section>
-  <h2>FP vs. FRP</h2>
-
-  <ul>
-    <li>FRP have a small downside</li>
-    <li>Open ended set of end points: DOM, MongoDB strems, WebSockets....</li>
-    <li>Is there an adapter for my event sources?</li>
-    <li>Can I write easily a new adapter if there is none?</li>
-  </ul>
-
-  <ul class="fragment" style="margin-top: 1em">
-    <li>FP have a small downside too</li>
-    <li>Many thinks it's scary !</li>
-    <li>Need to learn a new paradigm</li>
   </ul>
 </section>
 
