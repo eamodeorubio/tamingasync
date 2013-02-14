@@ -906,11 +906,13 @@
   <h4>(to update UI and server)</h4>
   <pre><code contenteditable>
     var showUserPic = composeAsync([
-        perform(ui.showProgressIndicator.bind(ui)), // Side effect
+        // Side effect
+        perform(ui.showProgressIndicator.bind(ui)),
         findUserById,
         mapSync(getProperty('picId')),
         loadPic,
-        perform(ui.show.bind(ui)) // Side effect
+        // Side effect
+        perform(ui.show.bind(ui))
     ]);
   </code></pre>
   <p>No transformation</p>
@@ -979,7 +981,6 @@
       // perform not in Async
       perform(ui.showProgressIndicator.bind(ui))
   );
-
   showUserPic('kike', function (err, pic) {
     // Node convention
     if(err)
@@ -1007,22 +1008,21 @@
   <h4>(a simplified version)</h4>
 
   <pre><code contenteditable>
-    var liveSearch = composeAsync([
-      mapSync(keyUpEventsToSearchText),
-      changes(),
-      limitThroughput(2),
-      filter(searchTextShorterThan(3))
-      perform(ui.startSearching.bind(ui)),
-      mapSync(searchTermToSearch),
-      perform(function (search) {
-        search.on('data', ui.appendResult.bind(ui));
-      }),
-      perform(function (search) {
-        search.on('end', ui.endSearching.bind(ui));
-      })
-    ]);
-
-    searchInputText.addEventListener('keyup', liveSearch);
+  var liveSearch = composeAsync([
+    mapSync(keyUpEventsToSearchText),
+    changes(),
+    limitThroughput(2),
+    filter(searchTextShorterThan(3))
+    perform(ui.startSearching.bind(ui)),
+    mapSync(searchTermToSearch),
+    perform(function (search) {
+      search.on('data', ui.appendResult.bind(ui));
+    }),
+    perform(function (search) {
+      search.on('end', ui.endSearching.bind(ui));
+    })
+  ]);
+  searchInputText.addEventListener('keyup', liveSearch);
   </code></pre>
 </section>
 
@@ -1108,21 +1108,21 @@
   <h4>(simplified version)</h4>
 
   <pre><code contenteditable>
-    var es = require('event-stream'),
-             domstream = require('domnode-dom');
-    var searchStream = es.pipeline(
-        domstream.createReadStream('input.search', 'keyup'),
-        es.mapSync(trim),
-        es.mapSync(toLowerCase),
-        es.mapSync(function(text) {
-          ui.showProgressIndicator();
-          return text;
-        }),
-        es.map(search),
-    );
-    searchStream.on('data', ui.show.bind(ui));
-    searchStream.on('error', ui.error.bind(ui));
-    searchStream.on('end', ui.hideProgressIndicator.bind(ui));
+  var es = require('event-stream'),
+           domstream = require('domnode-dom');
+  var searchStream = es.pipeline(
+      domstream.createReadStream('input.search', 'keyup'),
+      es.mapSync(trim),
+      es.mapSync(toLowerCase),
+      es.mapSync(function(text) {
+        ui.showProgressIndicator();
+        return text;
+      }),
+      es.map(search),
+  );
+  searchStream.on('data', ui.show.bind(ui));
+  searchStream.on('error', ui.error.bind(ui));
+  searchStream.on('end', ui.hideProgressIndicator.bind(ui));
   </code></pre>
   <p class="fragment">Rings a bell?</p>
 </section>
