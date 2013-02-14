@@ -860,12 +860,9 @@
   <h4>(only happy path is shown)</h4>
   <pre><code contenteditable>
     function composeAsync(fns) {
-      if (fns.length == 1)
+      if (fns.length === 1)
         return fns[0];
-      if (fns.length == 2)
-        return composeTwo(fns[0], fns[1]);
-      return compose([composeTwo(fns[0], fns[1])]
-                            .concat(fns.slice(2)));
+      return fns.reduce(composeTwo);
     };
   </code></pre>
 </section>

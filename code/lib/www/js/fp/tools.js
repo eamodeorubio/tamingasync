@@ -25,9 +25,7 @@ var fpToolkit = fpToolkit || {};
       return;
     if (fns.length == 1)
       return fns[0];
-    if (fns.length == 2)
-      return compose(fns[0], fns[1]);
-    return pipe([compose(fns[0], fns[1])].concat(fns.slice(2)));
+    return fns.reduce(compose);
   };
 
   var map = ns.map = function (fn, mapperFn) {
