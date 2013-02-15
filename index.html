@@ -592,7 +592,7 @@
         .fail(function(err) {
           if(err.isFatal())
             throw err;
-          return recoverError(err);
+          return recoverError(err); // Should return a pic
         })
         .then(function(pic) {
           ui.show(pic);
