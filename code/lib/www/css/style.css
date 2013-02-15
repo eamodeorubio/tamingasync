@@ -82,7 +82,7 @@ body {
   margin: 0.5em 5% 1em 5%;
 }
 
-@media all and (min-width: 1024px) {
+@media all and (min-width: 1025px) {
   .app {
     width: 1024px;
   }
@@ -116,7 +116,7 @@ body {
   }
 }
 
-@media all and (min-width: 640px) and (max-width: 1023px) {
+@media all and (min-width: 640px) and (max-width: 1024px) {
   .app {
     width: 640px;
   }
