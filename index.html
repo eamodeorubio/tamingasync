@@ -319,7 +319,7 @@
       return loadPic(user.picId);
     }
 
-    ui.show(loadUserPic('kike'));
+    ui.show(loadUserPic('john'));
   </code></pre>
 </section>
 
@@ -335,7 +335,7 @@
       });
     }
 
-    loadUserPic('kike', function(pic) {
+    loadUserPic('john', function(pic) {
       ui.show(pic);
     });
   </code></pre>
@@ -360,7 +360,7 @@
       }
     }();
 
-    loadUserPic('kike', ui.show.bind(ui));
+    loadUserPic('john', ui.show.bind(ui));
   </code></pre>
   <p class="fragment">A lot of boilerplate</p>
 </section>
@@ -377,7 +377,7 @@
       return loadPic(result.picId);
     }
 
-    var result = loadUserPic('kike')
+    var result = loadUserPic('john')
     if(result.error)
       return ui.error(result.error);
     ui.show(result);
@@ -398,7 +398,7 @@
       });
     }
 
-    loadUserPic('kike', function(err, pic) {
+    loadUserPic('john', function(err, pic) {
       if(err)
         return ui.error(err);
       ui.show(pic);
@@ -418,7 +418,7 @@
     }
 
     try {
-      ui.show(loadUserPic('kike'));
+      ui.show(loadUserPic('john'));
     } catch(err) {
       ui.error(err);
     }
@@ -437,7 +437,7 @@
       }, thr);
     }
 
-    loadUserPic('kike', ui.show.bind(ui), ui.error.bind(ui));
+    loadUserPic('john', ui.show.bind(ui), ui.error.bind(ui));
   </code></pre>
 
   <p class="fragment">Much better</p>
@@ -511,7 +511,7 @@
   <h2>Accessing the value</h2>
 
   <pre><code contenteditable>
-    var promisedPic = loadUserPic('kike');
+    var promisedPic = loadUserPic('john');
 
     // Some time later
 
@@ -528,7 +528,7 @@
   <h4>(so what?)</h4>
 
   <pre><code contenteditable>
-    findUserById('kike')
+    findUserById('john')
         .then(function(user) {
           return
               findPic(user.picId)
@@ -545,7 +545,7 @@
   <h4>(no such thing as a nested promise)</h4>
 
   <pre><code contenteditable>
-    findUserById('kike')
+    findUserById('john')
         .then(function(user) {
           return findPic(user.picId);
         })
@@ -561,7 +561,7 @@
   <h2>Error handling</h2>
   <h4>(catching errors)</h4>
 
-  <pre><code contenteditable>  findUserById('kike')
+  <pre><code contenteditable>  findUserById('john')
         .then(function(user) {
           return findPic(user.picId);
         })
@@ -569,7 +569,7 @@
           ui.show(pic);
         }, ui.error.bind(ui));</code></pre>
 
-  <pre class="fragment"><code contenteditable>  findUserById('kike')
+  <pre class="fragment"><code contenteditable>  findUserById('john')
         .then(function(user) {
           return findPic(user.picId);
         })
@@ -585,7 +585,7 @@
   <h4>(to throw or not to throw?)</h4>
 
   <pre><code contenteditable>
-    findUserById('kike')
+    findUserById('john')
         .then(function(user) {
           return findPic(user.picId);
         })
@@ -606,7 +606,7 @@
   <h4>(with style)</h4>
 
   <pre><code contenteditable>
-    findUserById('kike')
+    findUserById('john')
         .then(function(user) {
           return findPic(user.picId);
         })
@@ -616,7 +616,7 @@
   </code></pre>
 
   <pre class="fragment"><code contenteditable>
-    findUserById('kike')
+    findUserById('john')
         .then(function(user) {
           return findPic(user.picId);
         })
@@ -766,7 +766,7 @@
       ui.show(pic);
     }
 
-    showUserPic('kike');
+    showUserPic('john');
   </code></pre>
 </section>
 
@@ -782,7 +782,7 @@
       ui.show.bind(ui)
     ]);
 
-    showUserPic('kike');
+    showUserPic('john');
   </code></pre>
 </section>
 
@@ -801,7 +801,7 @@
       });
     }
 
-    showUserPic('kike', function() {
+    showUserPic('john', function() {
       ui.hideProgressIndicator();
     });
   </code></pre>
@@ -819,7 +819,7 @@
         loadPic, // Async transformation
         perform(ui.show.bind(ui))
     ]);
-    showUserPic('kike', ui.hideProgressIndicator.bind(ui));</code></pre>
+    showUserPic('john', ui.hideProgressIndicator.bind(ui));</code></pre>
   <pre class="fragment"><code contenteditable>var showUserPic = compose([
         findUserById,
         getProperty('picId'),
@@ -950,7 +950,7 @@
             .perform(ui.show.bind(ui));
 
     showUserPic
-        .perform(ui.hideProgressIndicator.bind(ui))('kike');
+        .perform(ui.hideProgressIndicator.bind(ui))('john');
   </code></pre>
 </section>
 
@@ -978,7 +978,7 @@
       // perform not in Async
       perform(ui.showProgressIndicator.bind(ui))
   );
-  showUserPic('kike', function (err, pic) {
+  showUserPic('john', function (err, pic) {
     // Node convention
     if(err)
       return ui.showError(err);
