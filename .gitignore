@@ -1,5 +1,4 @@
 .idea
 offline/
-*.min.js
 .DS_Store
 node_modules
