@@ -1,1 +1,0 @@
-browserify main.js -o ../www/js/es/main.js
