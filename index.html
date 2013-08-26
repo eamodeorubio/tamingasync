@@ -244,14 +244,13 @@
   <img src="img/EnriqueAmodeo.jpg" class="left"
        alt="[Enrique Amodeo, circa 2010]">
   <ul>
-    <li>Working as a professional since 2000</li>
+    <li>Follow me at
+      <a href="https://twitter.com/eamodeorubio">@eamodeorubio</a></li>
+    <li>Working since 2000</li>
     <li>Worked with JAVA/JEE and big companies</li>
     <li>Has loved JS since 2005</li>
     <li>Test infected</li>
     <li>Enthusiast of the Agile/Lean way</li>
-    <li>Now Freelancing</li>
-    <li>Follow me at
-      <a href="https://twitter.com/eamodeorubio">@eamodeorubio</a></li>
   </ul>
 </section>
 
@@ -309,7 +308,7 @@
 </section>
 
 <section>
-  <h2>Problem 1: Composing async processes</h2>
+  <h2>Composing async processes</h2>
   <h4>(synchronous code)</h4>
 
   <pre><code contenteditable>
@@ -324,11 +323,11 @@
 </section>
 
 <section>
-  <h2>Problem 1: Composing async processes</h2>
+  <h2>Composing async processes</h2>
   <h4>(CPS)</h4>
 
   <pre><code contenteditable>
-    // Both findUserById & loadUserPic are async processes
+    // Both findUserById &amp; loadUserPic are async processes
     function loadUserPic(userId, ret) {
       findUserById(userId, function(user) {
         loadPic(user.picId, ret);
@@ -345,7 +344,7 @@
 </section>
 
 <section>
-  <h2>Problem 1: Composing async processes</h2>
+  <h2>Composing async processes</h2>
   <h4>(CPS, slightly better?)</h4>
 
   <pre><code contenteditable>
@@ -366,7 +365,7 @@
 </section>
 
 <section>
-  <h2>Problem 2: Error handling</h2>
+  <h2>Error handling</h2>
   <h4>(Old way)</h4>
 
   <pre><code contenteditable>
@@ -386,7 +385,7 @@
 </section>
 
 <section>
-  <h2>Problem 2: Error handling</h2>
+  <h2>Error handling</h2>
   <h4>(CPS equivalent)</h4>
 
   <pre><code contenteditable>
@@ -408,7 +407,7 @@
 </section>
 
 <section>
-  <h2>Problem 2: Error handling</h2>
+  <h2>Error handling</h2>
   <h4>(Exceptions)</h4>
 
   <pre><code contenteditable>
@@ -427,7 +426,7 @@
 </section>
 
 <section>
-  <h2>Problem 2: Error handling</h2>
+  <h2>Error handling</h2>
   <h4>(CPS)</h4>
 
   <pre><code contenteditable>
@@ -504,7 +503,7 @@
 
   <img src="img/sm.png">
 
-  <p class="fragment">Only can represent one single value</p>
+  <p class="fragment">Only can access the value after process has finished!</p>
 </section>
 
 <section>
@@ -528,14 +527,11 @@
   <h4>(so what?)</h4>
 
   <pre><code contenteditable>
-    findUserById('john')
-        .then(function(user) {
-          return
-              findPic(user.picId)
-                  .then(function(pic) {
-                    ui.show(pic);
-                  });
-        });
+    findUserById('john').then(function(user) {
+      return findPic(user.picId).then(function(pic) {
+        ui.show(pic);
+      });
+    });
   </code></pre>
 
 </section>
@@ -577,7 +573,6 @@
           ui.show(pic);
         })
         .fail(ui.error.bind(ui));</code></pre>
-
 </section>
 
 <section>
@@ -605,25 +600,22 @@
   <h2>Ending the chain</h2>
   <h4>(with style)</h4>
 
-  <pre><code contenteditable>
-    findUserById('john')
+  <pre><code contenteditable>    findUserById('john')
         .then(function(user) {
           return findPic(user.picId);
         })
         .then(function(pic) {
           ui.show(pic);
-        }).done(); // report unhandled errors
-  </code></pre>
-
-  <pre class="fragment"><code contenteditable>
-    findUserById('john')
+        }).done(); // report unhandled errors</code></pre>
+  <pre class="fragment"><code contenteditable>    findUserById('john')
         .then(function(user) {
           return findPic(user.picId);
         })
         .then(function(pic) {
           ui.show(pic);
-        }).fin(someCleanUp); // Like finally
-  </code></pre>
+        })
+        .fin(someCleanUp) // Like finally
+        .done();</code></pre>
 
 </section>
 
@@ -723,7 +715,7 @@
   <h2>Our test case</h2>
   <h4>(remember the TODO list for MVC?)</h4>
   <a target="_blank"
-     href="http://localhost:8081/fp.html"><img src="img/hh.png"></a>
+     href="http://localhost:8088/fp.html"><img src="img/hh.png"></a>
 </section>
 
 <section>
@@ -812,20 +804,20 @@
 <section>
   <h2>Composing functions</h2>
   <h4>(asynchronous, higher order functions)</h4>
-  <pre><code contenteditable>var showUserPic = composeAsync([
-        perform(ui.showProgressIndicator.bind(ui)),
-        findUserById, // Async transformation
-        mapSync(getProperty('picId')),
-        loadPic, // Async transformation
-        perform(ui.show.bind(ui))
-    ]);
-    showUserPic('john', ui.hideProgressIndicator.bind(ui));</code></pre>
-  <pre class="fragment"><code contenteditable>var showUserPic = compose([
-        findUserById,
-        getProperty('picId'),
-        loadPic,
-        ui.show.bind(ui)
-    ]);</code></pre>
+  <pre><code contenteditable>  var showUserPic = composeAsync([
+      perform(ui.showProgressIndicator.bind(ui)),
+      findUserById, // Async transformation
+      mapSync(getProperty('picId')),
+      loadPic, // Async transformation
+      perform(ui.show.bind(ui))
+  ]);
+  showUserPic('john', ui.hideProgressIndicator.bind(ui));</code></pre>
+  <pre class="fragment"><code contenteditable>  var showUserPic = compose([
+      findUserById,
+      getProperty('picId'),
+      loadPic,
+      ui.show.bind(ui)
+  ]);</code></pre>
   <p class="fragment">Same structure as the sync version!</p>
   <p class="fragment">No need to change paradigm</p>
 </section>
@@ -1160,8 +1152,6 @@
 <section class="separata">
   <hgroup>
     <h2>(Functional) Reactive Programming</h2>
-
-    <h3>(such a fancy name...)</h3>
   </hgroup>
   <figure>
     <img src="./img/assembly_line.jpg">
@@ -1182,7 +1172,7 @@
     <li>First citizen objects</li>
     <li>Coherent set of operations</li>
     <li>Coherent language</li>
-    <li>Chainable & Composable (jQuery/promise like)</li>
+    <li>Chainable &amp; Composable (jQuery/promise like)</li>
   </ul>
 </section>
 
@@ -1242,11 +1232,11 @@
   <ul>
     <li>Very complete</li>
     <li>Made for JS (TM)</li>
-    <li>Node & Browser</li>
+    <li>Node &amp; Browser</li>
     <li>More lightweight (5 KB min+zip)</li>
     <li>Not so huge, very focused</li>
     <li>Only bridges with jQuery/Zepto</li>
-    <li>Event Streams & Properties</li>
+    <li>Event Streams &amp; Properties</li>
     <li>Have a look <a href="https://github.com/raimohanska/bacon.js">http://bit.ly/wdEr9r</a></li>
   </ul>
 </section>
@@ -1302,11 +1292,17 @@
 </section>
 
 <section>
-  <h2>When to use CPS</h2>
+  <h2>General rule!</h2>
+  <h4>(let's keep it simple)</h4>
 
+  <p>Use the <em>most simple tool</em> that could resolve your problem</p>
+</section>
+
+<section>
+  <h2>When to use CPS</h2>
+  <h4>(for simple logic)</h4>
   <ul>
     <li>Symple async logic: at most 2 async transformations.</li>
-    <li>I'm paranoid about performance</li>
     <li>No time to learn anything more complex</li>
     <li>Often in small code bases or POCs</li>
   </ul>
@@ -1314,35 +1310,19 @@
 
 <section>
   <h2>When to use Promises</h2>
-
   <ul>
-    <li>My async processes return a single value</li>
-    <li>My async processes return a small collection</li>
-    <li>But you need 1 or 2 work days to learn it</li>
+    <li>I need to chain async processes</li>
+    <li>No need to use fancy incremental processing</li>
   </ul>
 </section>
 
 <section>
-  <h2>When to use FP</h2>
-
+  <h2>When to use FP or FRP</h2>
+  <h4>(when promises are not enough)</h4>
   <ul>
     <li>In use cases promises don't help me</li>
-    <li>Lightweight approach</li>
-    <li>My team is comfortable with FP</li>
-    <li>My personal choice</li>
-    <li>Large code bases</li>
-  </ul>
-</section>
-
-<section>
-  <h2>When to use FRP</h2>
-
-  <ul>
-    <li>In use cases promises don't help me</li>
-    <li>Don't mind using a framework</li>
-    <li>My team is not so comfortable with FP, but can live with it</li>
-    <li>Large code bases</li>
-    <li>Powerful but needs time to master</li>
+    <li>Incremental processing, UI logic, etc.</li>
+    <li>The one you are more comfortable with!</li>
   </ul>
 </section>
 
