@@ -2,3 +2,6 @@
 offline/
 .DS_Store
 node_modules
+pics/
+sampledb/
+import.js
