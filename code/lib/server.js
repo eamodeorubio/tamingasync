@@ -3,10 +3,11 @@
 var mongoClient = require('mongodb'),
     express = require('express'),
     config = require('konphyg')(__dirname + '/../config')('settings'),
-    Emitter = require('events').EventEmitter,
-    uriPrefix = config.urlPrefix,
-    dbConnectionString = config.dbString,
     port = config.port,
+    Emitter = require('events').EventEmitter,
+    uriPrefix = 'http://localhost:' + port + '/pics/',
+    dbConnectionString = config.dbString,
+
     delay = config.delay;
 
 function sendToClient(res) {
@@ -22,7 +23,7 @@ function sendToClient(res) {
 mongoClient.connect(dbConnectionString, function (err, db) {
   if (err) return console.log(dbConnectionString, err);
 
-  var hhs = db.collection('hhs'),
+  var items = db.collection('items'),
       app = express();
 
   function openQuery(searchText) {
@@ -30,17 +31,17 @@ mongoClient.connect(dbConnectionString, function (err, db) {
         keywords = searchText.split(/\b/),
         conditions = keywords.map(function (word) {
           return {
-            description:{
-              $regex:word.toLowerCase(),
-              $options:'i'
+            description: {
+              $regex: word.toLowerCase(),
+              $options: 'i'
             }
           };
         }),
         stream,
         me;
 
-    stream = hhs.find({
-      $and:conditions
+    stream = items.find({
+      $and: conditions
     }).stream();
 
     function resume() {
@@ -53,10 +54,10 @@ mongoClient.connect(dbConnectionString, function (err, db) {
           if (!stream)
             return;
           emitter.emit('message', {
-            type:'data',
-            data:{
-              img:uriPrefix + item.filename,
-              description:item.description
+            type: 'data',
+            data: {
+              img: uriPrefix + item.filename,
+              description: item.description
             }
           });
           stream.pause();
@@ -66,25 +67,25 @@ mongoClient.connect(dbConnectionString, function (err, db) {
             return;
           console.log(err);
           emitter.emit('message', {
-            type:'error',
-            data:err
+            type: 'error',
+            data: err
           });
           emitter.emit('message', {
-            type:'end'
+            type: 'end'
           });
         }).on('close', function () {
           emitter.emit('message', {
-            type:'end'
+            type: 'end'
           });
           stream = null;
         });
 
     return me = {
-      onMessage:function (listener) {
+      onMessage: function (listener) {
         emitter.on('message', listener);
         return me;
       },
-      abort:function () {
+      abort: function () {
         if (stream) {
           stream.destroy();
           stream = null;
@@ -102,9 +103,9 @@ mongoClient.connect(dbConnectionString, function (err, db) {
     var searchText = req.param('q');
     searchText = searchText ? searchText.trim() : '';
     res.writeHead(200, {
-      'Content-Type':'text/event-stream',
-      'Cache-Control':'no-cache',
-      'Connection':'keep-alive'
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive'
     });
     res.write('\n');
 
